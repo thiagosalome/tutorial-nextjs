@@ -146,3 +146,41 @@ export default function Alert({ children, type }) {
   )
 }
 ```
+
+---
+
+## Pre-rendering and Data Fetching
+
+### Pre-rendering
+
+By default, Next.js pre-renders every page. This means that Next.js generates HTML for each page in advance, instead of having it all done by client-side JavaScript. **Pre-rendering can result in better performance and SEO.**
+
+If your app is a plain React.js app (without Next.js), there’s no pre-rendering, so you won’t be able to see the app if you disable JavaScript.
+
+#### Summary: Pre-rendering vs No Pre-rendering
+
+![Pre-rendering](https://nextjs.org/static/images/learn/data-fetching/pre-rendering.png)
+
+![No Pre-rendering](https://nextjs.org/static/images/learn/data-fetching/no-pre-rendering.png)
+
+### Two Forms of Pre-rendering
+
+Next.js has two forms of pre-rendering: Static Generation and Server-side Rendering. The difference is in when it generates the HTML for a page.
+
+* [Static Generation](https://nextjs.org/docs/basic-features/pages#static-generation-recommended) is the pre-rendering method that generates the HTML at **build time**. The pre-rendered HTML is then reused on each request.
+
+![Static Generation](https://nextjs.org/static/images/learn/data-fetching/static-generation.png)
+
+* [Server-side Rendering](https://nextjs.org/docs/basic-features/pages#server-side-rendering) is the pre-rendering method that generates the HTML on **each request**.
+
+![Server-side Rendering](https://nextjs.org/static/images/learn/data-fetching/server-side-rendering.png)
+
+**OBS:** In development mode (when you run npm run dev or yarn dev), every page is pre-rendered on each request — even for pages that use Static Generation.
+
+#### Per-page Basis
+
+Importantly, Next.js lets you choose which pre-rendering form to use for each page. You can create a "hybrid" Next.js app by using Static Generation for most pages and using Server-side Rendering for others.
+
+![Per-page Basis](https://nextjs.org/static/images/learn/data-fetching/per-page-basis.png)
+
+#### When to Use Static Generation v.s. Server-side Rendering

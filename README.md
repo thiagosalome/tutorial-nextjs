@@ -184,3 +184,44 @@ Importantly, Next.js lets you choose which pre-rendering form to use for each pa
 ![Per-page Basis](https://nextjs.org/static/images/learn/data-fetching/per-page-basis.png)
 
 #### When to Use Static Generation v.s. Server-side Rendering
+
+#### When to use Static Generation and Sever-side Rendering
+
+We recommend using Static Generation (with and without data) whenever possible because your page can be built once and served by CDN, which makes it much faster than having a server render the page on every request.
+
+You should ask yourself: "Can I pre-render this page ahead of a user's request?" If the answer is yes, then you should choose Static Generation.
+
+On the other hand, Static Generation is not a good idea if you cannot pre-render a page ahead of a user's request. Maybe your page **shows frequently updated data**, and the **page content changes on every request**. In that case, you can use Server-side Rendering. It will be slower, but the pre-rendered page will always be up-to-date
+
+### Static Generation with and without Data
+
+So far, all the pages we’ve created do not require fetching external data. **Those pages will automatically be statically generated** when the app is built for production.
+
+![Static Generation without Data](https://nextjs.org/static/images/learn/data-fetching/static-generation-without-data.png)
+
+However, for some pages, you might not be able to render the HTML without first fetching some external data.
+
+![Static Generation with Data](https://nextjs.org/static/images/learn/data-fetching/static-generation-with-data.png)
+
+#### Static Generation with Data using ```getStaticProps```
+
+In Next.js, when you export a page component, you can also export an async function called getStaticProps. If you do this, then:
+
+```js
+export default function Home(props) { ... }
+
+export async function getStaticProps() {
+  // Get external data from the file system, API, DB, etc.
+  const data = ...
+
+  // The value of the `props` key will be
+  //  passed to the `Home` component
+  return {
+    props: ...
+  }
+}
+```
+
+```
+Note: In development mode, getStaticProps runs on each request instead.
+```

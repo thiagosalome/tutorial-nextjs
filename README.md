@@ -225,3 +225,97 @@ export async function getStaticProps() {
 ```
 Note: In development mode, getStaticProps runs on each request instead.
 ```
+
+### getStaticProps Details
+
+As a pattern, when we need fetch data from a source, we create a file in lib/posts.js for example.
+
+#### Fetch External API or Query Database
+
+You can fetch the data from other sources, like an external API endpoint, and it’ll work just fine:
+
+```js
+export async function getSortedPostsData() {
+  // Instead of the file system,
+  // fetch post data from an external API endpoint
+  const res = await fetch('..')
+  return res.json()
+}
+```
+
+You can also query the database directly:
+
+```js
+import someDatabaseSDK from 'someDatabaseSDK'
+
+const databaseClient = someDatabaseSDK.createClient(...)
+
+export async function getSortedPostsData() {
+  // Instead of the file system,
+  // fetch post data from a database
+  return databaseClient.query('SELECT posts...')
+}
+```
+
+OBS: This is possible because getStaticProps **runs only on the server-side**. It will never run on the client-side.
+
+#### Development vs. Production
+
+* In development (npm run dev or yarn dev), getStaticProps runs on every request.
+* In production, getStaticProps runs at build time.
+
+#### Only Allowed in a Page
+
+```getStaticProps``` can only be exported from a page. You can’t export it from non-page files.
+
+#### What If I Need to Fetch Data at Request Time
+
+Static Generation is **not** a good idea if you cannot pre-render a page ahead of a user's request. Maybe your page shows frequently updated data, and the page content changes on every request.
+
+In cases like this, you can try **Server-side** Rendering or skip pre-rendering.
+
+### Fetching Data at Request Time
+
+If you need to fetch data at **request time** instead of at build time, you can try **Server-side Rendering**:
+
+![Server-side Rendering with Data](https://nextjs.org/static/images/learn/data-fetching/server-side-rendering-with-data.png)
+
+To use Server-side Rendering, you need to export ```getServerSideProps``` instead of ```getStaticProps``` from your page. Exemple:
+
+```js
+export async function getServerSideProps(context) {
+  return {
+    props: {
+      // props for your component
+    }
+  }
+}
+```
+
+Because ```getServerSideProps``` is called at request time, its parameter ```(context)``` contains request specific parameters.
+
+OBS: You should use getServerSideProps **only if you need to pre-render**. Time to first byte (TTFB) will be slower than getStaticProps because the server must compute the result on every request.
+
+#### Client-side Rendering
+
+If you do not need to pre-render the data, you can also use the following strategy (called Client-side Rendering):
+
+![Fetch Data on the Client-Side](https://nextjs.org/static/images/learn/data-fetching/client-side-rendering.png)
+
+This approach works well for user dashboard pages, for example. Because a dashboard is a private, user-specific page, SEO is not relevant, and the page doesn’t need to be pre-rendered.
+
+#### SWR
+
+The team behind Next.js has created a React hook for data fetching called SWR. We highly recommend it if you’re fetching data on the client side. Exemple:
+
+```js
+import useSWR from 'swr'
+
+function Profile() {
+  const { data, error } = useSWR('/api/user', fetch)
+
+  if (error) return <div>failed to load</div>
+  if (!data) return <div>loading...</div>
+  return <div>hello {data.name}!</div>
+}
+```

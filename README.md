@@ -47,16 +47,6 @@ Furthermore, in a production build of Next.js, whenever ```Link``` components ap
 
 Next.js has built-in support for CSS and Sass. For this course, we will use CSS.
 
-#### What You’ll Learn in This Lesson
-
-In this lesson, you’ll learn:
-
-* How to add static files (images, etc) to Next.js.
-* How to customize what goes inside the <head> for each page.
-* How to create a reusable React component which is styled using CSS Modules.
-* How to add global CSS in pages/_app.js.
-* Some useful tips for styling in Next.js.
-
 ### Assets
 
 Next.js can serve static files, like images, under the top-level public directory. Files inside public can be referenced from the root of the application similar to pages.
@@ -257,7 +247,7 @@ export async function getSortedPostsData() {
 }
 ```
 
-OBS: This is possible because getStaticProps **runs only on the server-side**. It will never run on the client-side.
+**OBS**: This is possible because getStaticProps **runs only on the server-side**. It will never run on the client-side.
 
 #### Development vs. Production
 
@@ -319,3 +309,121 @@ function Profile() {
   return <div>hello {data.name}!</div>
 }
 ```
+
+---
+
+## Dynamic Routes
+
+### Page Path Depends on External Data
+
+In this lesson, we’ll talk about the case where each page path depends on external data.
+
+![Page Path Depends on External Data](https://nextjs.org/static/images/learn/dynamic-routes/page-path-external-data.png)
+
+#### Overview of the Steps
+
+![Overview of the Steps](https://nextjs.org/static/images/learn/dynamic-routes/how-to-dynamic-routes.png)
+
+### Dynamic Routes Details
+
+Here is some essential information you should know about dynamic routes.
+
+#### Fetch External API or Query Database
+
+Like getStaticProps, getStaticPaths can fetch data from any data source. In our example, getAllPostIds (which is used by getStaticPaths) may fetch from an external API endpoint:
+
+```js
+export async function getAllPostIds() {
+  // Instead of the file system,
+  // fetch post data from an external API endpoint
+  const res = await fetch('..')
+  const posts = await res.json()
+  return posts.map(post => {
+    return {
+      params: {
+        id: post.id
+      }
+    }
+  })
+}
+```
+
+#### Development v.s. Production
+
+* In development (```npm run dev``` or ```yarn dev```), ```getStaticPaths``` runs on every request.
+* In production, ```getStaticPaths``` runs at build time.
+
+#### Fallback
+
+Recall that we returned ```fallback: false``` from getStaticPaths. What does this mean?
+
+If ```fallback``` is ```false```, **then any paths not returned by getStaticPaths will result in a 404 page**.
+
+If ```fallback``` is ```true```, then the behavior of getStaticProps changes:
+
+* The paths that have not been generated at build time will not result in a 404 page. Instead, Next.js will serve a “fallback” version of the page on the first request to such a path.
+
+* In the background, Next.js will statically generate the requested path. Subsequent requests to the same path will serve the generated page, just like other pages pre-rendered at build time.
+
+#### Catch-all Routes
+
+Dynamic routes can be extended to catch all paths by adding three dots (...) inside the brackets. For example:
+
+* pages/posts/[...id].js matches /posts/a, but also /posts/a/b, /posts/a/b/c and so on.
+
+If you do this, in getStaticPaths, you must return an array as the value of the id key like so:
+
+```js
+return [
+  {
+    params: {
+      // Statically Generates /posts/a/b/c
+      id: ['a', 'b', 'c']
+    }
+  }
+  //...
+]
+```
+
+And params.id will be an array in getStaticProps:
+
+```js
+export async function getStaticProps({ params }) {
+  // params.id will be like ['a', 'b', 'c']
+}
+```
+
+---
+
+## API Routes
+
+### Creating API Routes
+
+API Routes let you create an API endpoint inside a Next.js app. You can do so by creating a function inside the pages/api directory that has the following format:
+
+```js
+// req = request data, res = response data
+export default (req, res) => {
+  // ...
+}
+```
+
+They can be deployed as Serverless Functions (also known as Lambdas).
+
+### API Routes Details
+
+#### Do Not Fetch an API Route from getStaticProps or getStaticPaths
+
+You should not fetch an API Route from getStaticProps or getStaticPaths. Instead, write your server-side code directly in getStaticProps or getStaticPaths (or call a helper function).
+
+Here’s why: getStaticProps and getStaticPaths runs only on the server-side. It will never be run on the client-side.
+
+#### A Good Use Case: Handling Form Input
+
+A good use case for API Routes is handling form input. For example, you can create a form on your page and have it send a POST request to your API Route.
+
+#### Preview Mode
+
+Static Generation is useful when your pages fetch data from a headless CMS. However, it’s not ideal when you’re writing a draft on your headless CMS and want to preview the draft immediately on your page.
+
+Next.js has a feature called Preview Mode to solve the problem above, and it utilizes API Routes.
